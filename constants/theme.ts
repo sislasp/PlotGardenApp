@@ -1,41 +1,83 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
-
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
+    text: '#1a1a18',
+    textMuted: '#6b6b67',
+    background: '#ffffff',
+    backgroundSecondary: '#f5f4f0',
+    backgroundCanvas: '#EAF3DE',
+    border: 'rgba(0,0,0,0.1)',
+    tint: '#1D9E75',
     tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    tabIconSelected: '#1D9E75',
+    green: '#1D9E75',
+    greenLight: '#E1F5EE',
+    greenDark: '#0F6E56',
+    headerBg: '#EAF3DE',
+    cardBg: '#f5f4f0',
+    strip: '#FAEEDA',
   },
   dark: {
     text: '#ECEDEE',
+    textMuted: '#9BA1A6',
     background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
+    backgroundSecondary: '#1e2022',
+    backgroundCanvas: '#1a2e1f',
+    border: 'rgba(255,255,255,0.1)',
+    tint: '#1D9E75',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: '#1D9E75',
+    green: '#1D9E75',
+    greenLight: '#0d2e22',
+    greenDark: '#9FE1CB',
+    headerBg: '#1a2e1f',
+    cardBg: '#1e2022',
+    strip: '#2e2310',
+  },
+  forest: {
+    text: '#1a2e1a',
+    textMuted: '#4a6741',
+    background: '#f0f7ee',
+    backgroundSecondary: '#dff0d8',
+    backgroundCanvas: '#c8e6c9',
+    border: 'rgba(0,80,0,0.15)',
+    tint: '#2e7d32',
+    tabIconDefault: '#4a6741',
+    tabIconSelected: '#2e7d32',
+    green: '#2e7d32',
+    greenLight: '#c8e6c9',
+    greenDark: '#1b5e20',
+    headerBg: '#c8e6c9',
+    cardBg: '#dff0d8',
+    strip: '#fff9c4',
+  },
+  sunset: {
+    text: '#2d1b00',
+    textMuted: '#7a4f2a',
+    background: '#fff8f0',
+    backgroundSecondary: '#fde8cc',
+    backgroundCanvas: '#ffd5a0',
+    border: 'rgba(120,60,0,0.15)',
+    tint: '#e65100',
+    tabIconDefault: '#7a4f2a',
+    tabIconSelected: '#e65100',
+    green: '#e65100',
+    greenLight: '#fde8cc',
+    greenDark: '#bf360c',
+    headerBg: '#ffd5a0',
+    cardBg: '#fde8cc',
+    strip: '#e8f5e9',
   },
 };
 
+export type ThemeName = keyof typeof Colors;
+
 export const Fonts = Platform.select({
   ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
     sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
     serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
     rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
     mono: 'ui-monospace',
   },
   default: {
