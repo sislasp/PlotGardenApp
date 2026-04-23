@@ -156,6 +156,7 @@ export default function GardenScreen() {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const canvasOffset = useRef({ x: 0, y: 0 });
+  const canvasRef = useRef<any>(null);
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -186,7 +187,6 @@ export default function GardenScreen() {
       if (shape) setGardenShape(JSON.parse(shape));
       if (plants) {
         const parsed = JSON.parse(plants);
-        // Migrate old data without wateringHistory
         const migrated = parsed.map((p: any) => ({
           ...p,
           wateringHistory: p.wateringHistory || [p.lastWatered],
@@ -233,24 +233,38 @@ export default function GardenScreen() {
   }
 
   function handleCanvasTap(e: any) {
-    if (isDragging) return;
-    if (scale.value !== savedScale.value) return;
-    const { locationX, locationY } = e.nativeEvent;
-    const point = { x: locationX / scale.value, y: locationY / scale.value };
+  if (isDragging) return;
+  if (scale.value !== savedScale.value) return;
 
-    if (mode === 'draw') {
-      const newShape = [...gardenShape, point];
-      setGardenShape(newShape);
-      saveShape(newShape);
-    } else {
-      if (gardenShape.length >= 3 && !pointInPolygon(point, gardenShape)) {
-        Alert.alert('Outside garden', 'Tap inside your garden area to place a plant.');
-        return;
-      }
-      setTapPosition(point);
-      setShowPicker(true);
-    }
+  let x: number;
+  let y: number;
+
+  if (e.nativeEvent.clientX !== undefined && canvasRef.current) {
+    const rect = canvasRef.current.getBoundingClientRect();
+    console.log('clientX:', e.nativeEvent.clientX, 'clientY:', e.nativeEvent.clientY);
+    console.log('rect left:', rect.left, 'rect top:', rect.top);
+    x = (e.nativeEvent.clientX - rect.left) / scale.value;
+    y = (e.nativeEvent.clientY - rect.top) / scale.value;
+  } else {
+    x = e.nativeEvent.locationX / scale.value;
+    y = e.nativeEvent.locationY / scale.value;
   }
+
+  const point = { x, y };
+
+  if (mode === 'draw') {
+    const newShape = [...gardenShape, point];
+    setGardenShape(newShape);
+    saveShape(newShape);
+  } else {
+    if (gardenShape.length >= 3 && !pointInPolygon(point, gardenShape)) {
+      Alert.alert('Outside garden', 'Tap inside your garden area to place a plant.');
+      return;
+    }
+    setTapPosition(point);
+    setShowPicker(true);
+  }
+}
 
   function handlePointMove(index: number, x: number, y: number) {
     setIsDragging(true);
@@ -305,7 +319,7 @@ export default function GardenScreen() {
     const daysLate = getDaysUntilWater(pp.plant, pp.lastWatered);
     const onTime = daysLate >= -1;
     const newStreak = onTime ? pp.streak + 1 : 1;
-    const newHistory = [...pp.wateringHistory, now].slice(-20); // keep last 20
+    const newHistory = [...pp.wateringHistory, now].slice(-20);
     const newPlants = placedPlants.map(p =>
       p.id === pp.id ? { ...p, lastWatered: now, wateringHistory: newHistory, streak: newStreak, notifId: newNotifId } : p
     );
@@ -366,21 +380,21 @@ export default function GardenScreen() {
       <View style={[styles.container, { backgroundColor: theme.background }]}>
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-  <Text style={[styles.title, { color: theme.text }]}>My Garden</Text>
-  <HelpModal
-    title="How to use the Garden 🌿"
-    items={[
-      { icon: '✏️', title: 'Draw your garden', desc: 'Tap Draw Shape, then tap points on the canvas to outline your garden area. The shape closes automatically.' },
-      { icon: '↩️', title: 'Undo points', desc: 'Made a mistake? Tap Undo to remove the last point you placed.' },
-      { icon: '👆', title: 'Drag points', desc: 'In Draw mode, drag any green dot to adjust your garden shape.' },
-      { icon: '🌱', title: 'Place plants', desc: 'Switch to Plant mode, then tap anywhere inside your garden to add a plant.' },
-      { icon: '🪱', title: 'Choose your soil', desc: 'After picking a plant, select your soil type. Warnings will show if the soil is not ideal.' },
-      { icon: '💧', title: 'Water tracking', desc: 'Tap a plant to see when it needs watering. Press "I watered this plant" to log it and reset the reminder.' },
-      { icon: '🔥', title: 'Streaks', desc: 'Water your plants on time to build a streak. Plants with a 3+ streak show a 🔥 badge.' },
-      { icon: '🔍', title: 'Zoom', desc: 'Pinch with two fingers to zoom in or out. Tap ⊙ Zoom to reset.' },
-    ]}
-  />
-</View>
+            <Text style={[styles.title, { color: theme.text }]}>My Garden</Text>
+            <HelpModal
+              title="How to use the Garden 🌿"
+              items={[
+                { icon: '✏️', title: 'Draw your garden', desc: 'Tap Draw Shape, then tap points on the canvas to outline your garden area. The shape closes automatically.' },
+                { icon: '↩️', title: 'Undo points', desc: 'Made a mistake? Tap Undo to remove the last point you placed.' },
+                { icon: '👆', title: 'Drag points', desc: 'In Draw mode, drag any green dot to adjust your garden shape.' },
+                { icon: '🌱', title: 'Place plants', desc: 'Switch to Plant mode, then tap anywhere inside your garden to add a plant.' },
+                { icon: '🪱', title: 'Choose your soil', desc: 'After picking a plant, select your soil type. Warnings will show if the soil is not ideal.' },
+                { icon: '💧', title: 'Water tracking', desc: 'Tap a plant to see when it needs watering. Press "I watered this plant" to log it and reset the reminder.' },
+                { icon: '🔥', title: 'Streaks', desc: 'Water your plants on time to build a streak. Plants with a 3+ streak show a 🔥 badge.' },
+                { icon: '🔍', title: 'Zoom', desc: 'Pinch with two fingers to zoom in or out. Tap ⊙ Zoom to reset.' },
+              ]}
+            />
+          </View>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <TouchableOpacity onPress={resetZoom}>
               <Text style={[styles.resetBtn, { color: theme.tint }]}>⊙ Zoom</Text>
@@ -428,13 +442,13 @@ export default function GardenScreen() {
 
         <GestureDetector gesture={composed}>
           <TouchableOpacity
+            ref={canvasRef}
             style={[styles.plotCanvas, { backgroundColor: theme.backgroundCanvas, borderColor: theme.border }]}
             onPress={handleCanvasTap}
             activeOpacity={1}
             onLayout={e => {
-              const { width, height, x, y } = e.nativeEvent.layout;
+              const { width, height } = e.nativeEvent.layout;
               setCanvasSize({ width, height });
-              canvasOffset.current = { x, y };
             }}
           >
             <Animated.View style={[{ width: '100%', height: '100%' }, animatedStyle]}>
@@ -464,7 +478,6 @@ export default function GardenScreen() {
               {placedPlants.map(pp => {
                 const daysLeft = getDaysUntilWater(pp.plant, pp.lastWatered);
                 const needsW = daysLeft <= 0;
-                const health = getHealthScore(pp);
                 return (
                   <TouchableOpacity
                     key={pp.id}
@@ -494,7 +507,6 @@ export default function GardenScreen() {
           </View>
         </View>
 
-        {/* Plant picker modal */}
         <Modal visible={showPicker} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={[styles.modalSheet, { backgroundColor: theme.background }]}>
@@ -518,7 +530,6 @@ export default function GardenScreen() {
           </View>
         </Modal>
 
-        {/* Soil picker modal */}
         <Modal visible={showSoilPicker} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={[styles.modalSheet, { backgroundColor: theme.background }]}>
@@ -554,7 +565,6 @@ export default function GardenScreen() {
           </View>
         </Modal>
 
-        {/* Plant detail modal */}
         <Modal visible={!!selectedPlant && !showHealthLog} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={[styles.detailSheet, { backgroundColor: theme.background }]}>
@@ -576,8 +586,6 @@ export default function GardenScreen() {
                         )}
                       </View>
                       <Text style={[styles.detailSub, { color: theme.textMuted }]}>Soil: {selectedPlant.soil}</Text>
-
-                      {/* Health score */}
                       <View style={[styles.healthCard, { backgroundColor: theme.cardBg }]}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                           <Text style={[styles.healthLabel, { color: theme.text }]}>Health Score</Text>
@@ -588,30 +596,25 @@ export default function GardenScreen() {
                         </View>
                         <Text style={[styles.healthPct, { color: theme.textMuted }]}>{health}% consistency</Text>
                       </View>
-
                       {soilWarning.level !== 'ok' && (
                         <View style={[styles.warnBox, { backgroundColor: soilWarning.level === 'danger' ? '#FFE5E5' : '#FAEEDA' }]}>
                           <Text style={{ color: soilWarning.level === 'danger' ? '#B00020' : '#854F0B', fontSize: 12 }}>{soilWarning.message}</Text>
                         </View>
                       )}
-
                       <View style={styles.waterStatus}>
                         <Text style={styles.waterStatusText}>
                           {daysLeft <= 0 ? '💧 Needs water now!' : `💧 Water in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`}
                         </Text>
                       </View>
-
                       <View style={styles.detailStats}>
                         <Text style={[styles.statItem, { backgroundColor: theme.cardBg, color: theme.text }]}>☀️ {selectedPlant.plant.sun}</Text>
                         <Text style={[styles.statItem, { backgroundColor: theme.cardBg, color: theme.text }]}>🌡️ {selectedPlant.plant.temp}</Text>
                         <Text style={[styles.statItem, { backgroundColor: theme.cardBg, color: theme.text }]}>⚡ {selectedPlant.plant.growth}</Text>
                         <Text style={[styles.statItem, { backgroundColor: theme.cardBg, color: theme.text }]}>☠️ {selectedPlant.plant.toxicity}</Text>
                       </View>
-
                       <TouchableOpacity style={[styles.logBtn, { borderColor: theme.tint }]} onPress={() => setShowHealthLog(true)}>
                         <Text style={[styles.logBtnText, { color: theme.tint }]}>📋 View Watering History ({selectedPlant.wateringHistory.length})</Text>
                       </TouchableOpacity>
-
                       <TouchableOpacity style={[styles.wateredBtn, { backgroundColor: theme.tint }]} onPress={() => markWatered(selectedPlant)}>
                         <Text style={styles.wateredBtnText}>💧 I watered this plant</Text>
                       </TouchableOpacity>
@@ -629,7 +632,6 @@ export default function GardenScreen() {
           </View>
         </Modal>
 
-        {/* Health log modal */}
         <Modal visible={showHealthLog} transparent animationType="slide">
           <View style={styles.modalOverlay}>
             <View style={[styles.modalSheet, { backgroundColor: theme.background }]}>
@@ -658,7 +660,6 @@ export default function GardenScreen() {
             </View>
           </View>
         </Modal>
-
       </View>
     </GestureHandlerRootView>
   );
