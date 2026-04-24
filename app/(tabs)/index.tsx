@@ -292,25 +292,30 @@ export default function GardenScreen() {
   }
 
   async function confirmPlacement() {
-    if (!pendingPlant) return;
-    const notifId = await scheduleWaterNotif(pendingPlant);
-    const now = new Date().toISOString();
-    const newPlants = [...placedPlants, {
-      id: Date.now(),
-      plant: pendingPlant,
-      x: tapPosition.x,
-      y: tapPosition.y,
-      soil: selectedSoil,
-      lastWatered: now,
-      wateringHistory: [now],
-      streak: 1,
-      notifId,
-    }];
-    setPlacedPlants(newPlants);
-    savePlants(newPlants);
-    setShowSoilPicker(false);
-    setPendingPlant(null);
+  if (!pendingPlant) return;
+  let notifId = '';
+  try {
+    notifId = await scheduleWaterNotif(pendingPlant);
+  } catch (e) {
+    // Notifications not supported on web
   }
+  const now = new Date().toISOString();
+  const newPlants = [...placedPlants, {
+    id: Date.now(),
+    plant: pendingPlant,
+    x: tapPosition.x,
+    y: tapPosition.y,
+    soil: selectedSoil,
+    lastWatered: now,
+    wateringHistory: [now],
+    streak: 1,
+    notifId,
+  }];
+  setPlacedPlants(newPlants);
+  savePlants(newPlants);
+  setShowSoilPicker(false);
+  setPendingPlant(null);
+}
 
   async function markWatered(pp: PlacedPlant) {
     await cancelNotif(pp.notifId);
